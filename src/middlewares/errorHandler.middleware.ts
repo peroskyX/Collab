@@ -2,6 +2,7 @@ import { ErrorRequestHandler, Response } from 'express';
 import { HTTPSTATUS } from '../config/http.config';
 // import { AppError } from "../utils/appError";
 import { z, ZodError } from 'zod';
+import { AppError } from '../utils/appError';
 // import { ErrorCodeEnum } from "../enums/error-code.enum";
 
 const formatZodError = (res: Response, error: z.ZodError) => {
@@ -34,12 +35,12 @@ export const errorHandler: ErrorRequestHandler = (
     return formatZodError(res, error);
   }
 
-  // if (error instanceof AppError) {
-  //   return res.status(error.statusCode).json({
-  //     message: error.message,
-  //     errorCode: error.errorCode,
-  //   });
-  // }
+  if (error instanceof AppError) {
+    return res.status(error.statusCode).json({
+      message: error.message,
+      errorCode: error.errorCode,
+    });
+  }
 
   return res.status(HTTPSTATUS.INTERNAL_SERVER_ERROR).json({
     message: 'Internal Server Error',

@@ -11,6 +11,8 @@ import {
   verifyUserService,
 } from '../services/auth.service';
 
+console.log(config.GOOGLE_CALLBACK_URL);
+console.log(passport.strategies);
 passport.use(
   new GoogleStrategy(
     {
