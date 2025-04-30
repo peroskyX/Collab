@@ -13,10 +13,11 @@ import { ErrorCodeEnum } from './enums/error-code.enum';
 import { HTTPSTATUS } from './config/http.config';
 import { errorHandler } from './middlewares/errorHandler.middleware';
 import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.route';
 
 const app = express();
 const BASE_PATH = config.BASE_PATH;
-console.log(BASE_PATH);
+console.log(typeof BASE_PATH);
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
@@ -43,7 +44,7 @@ app.use(
 );
 
 app.get(
-  `/api`,
+  `${BASE_PATH}`,
   asyncHandler(
     asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
       return res.status(HTTPSTATUS.OK).json({
@@ -53,7 +54,8 @@ app.get(
   )
 );
 
-app.use(`/api/v1/auth`, authRoutes);
+app.use(`${BASE_PATH}/v1/auth`, authRoutes);
+app.use(`${BASE_PATH}/v1/user`, userRoutes);
 
 app.use(errorHandler);
 
