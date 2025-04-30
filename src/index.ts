@@ -5,6 +5,11 @@ import session from 'cookie-session';
 import { config } from './config/app.config';
 
 import passport from 'passport';
+import connectDatabase from './config/database.config';
+import { asyncHandler } from './middlewares/asyncHandler.middleware';
+import { BadRequestException } from './utils/appError';
+import { ErrorCodeEnum } from './enums/error-code.enum';
+import { HTTPSTATUS } from './config/http.config';
 
 const app = express();
 
@@ -32,6 +37,22 @@ app.use(
   })
 );
 
+app.get(
+  `/`,
+  asyncHandler(
+    asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+      throw new BadRequestException(
+        'This is a bad request',
+        ErrorCodeEnum.AUTH_INVALID_TOKEN
+      );
+      return res.status(HTTPSTATUS.OK).json({
+        message: 'Hello Subscribe to the channel & share',
+      });
+    })
+  )
+);
+
 app.listen(config.PORT, async () => {
   console.log(`Server listening on port ${config.PORT} in ${config.NODE_ENV}`);
+  await connectDatabase();
 });
