@@ -5,6 +5,8 @@ import RoleModel from '../models/role-permission.model';
 import UserModel from '../models/user.model';
 import WorkspaceModel from '../models/workspace.model';
 import { NotFoundException } from '../utils/appError';
+import TaskModel from '../models/task.model';
+import { TaskStatusEnum } from '../enums/task.enum';
 
 export const createWorkspaceService = async (
   userId: string,
@@ -95,4 +97,86 @@ export const getWorkspaceMembersService = async (workspaceId: string) => {
     .lean();
 
   return { members, roles };
+};
+
+export const getWorkspaceAnalyticsService = async (workspaceId: string) => {
+  const currentDate = new Date();
+
+  const totalTasks = await TaskModel.countDocuments({
+    workspace: workspaceId,
+  });
+
+  const overdueTasks = await TaskModel.countDocuments({
+    workspace: workspaceId,
+    dueDate: { $lt: currentDate },
+    status: { $ne: TaskStatusEnum.DONE },
+  });
+
+  const completedTasks = await TaskModel.countDocuments({
+    workspace: workspaceId,
+    status: TaskStatusEnum.DONE,
+  });
+
+  const analytics = {
+    totalTasks,
+    overdueTasks,
+    completedTasks,
+  };
+
+  return { analytics };
+};
+
+export const changeMemberRoleService = async (
+  workspaceId: string,
+  memberId: string,
+  roleId: string
+) => {
+  const workspace = await WorkspaceModel.findById(workspaceId);
+  if (!workspace) {
+    throw new NotFoundException('Workspace not found');
+  }
+
+  const role = await RoleModel.findById(roleId);
+  if (!role) {
+    throw new NotFoundException('Role not found');
+  }
+
+  const member = await MemberModel.findOne({
+    userId: memberId,
+    workspaceId: workspaceId,
+  });
+
+  if (!member) {
+    throw new Error('Member not found in the workspace');
+  }
+
+  member.role = role;
+  await member.save();
+
+  return {
+    member,
+  };
+};
+
+//********************************
+// UPDATE WORKSPACE
+//**************** **************/
+export const updateWorkspaceByIdService = async (
+  workspaceId: string,
+  name: string,
+  description?: string
+) => {
+  const workspace = await WorkspaceModel.findById(workspaceId);
+  if (!workspace) {
+    throw new NotFoundException('Workspace not found');
+  }
+
+  // Update the workspace details
+  workspace.name = name || workspace.name;
+  workspace.description = description || workspace.description;
+  await workspace.save();
+
+  return {
+    workspace,
+  };
 };
